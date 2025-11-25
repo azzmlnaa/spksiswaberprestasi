@@ -1,0 +1,9 @@
+{
+  "name": "spk-siswa-berprestasi-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "live-server --port=3000 --host=0.0.0.0 frontend",
+    "build": "echo 'Static frontend - no build step included'"
+  }
+}

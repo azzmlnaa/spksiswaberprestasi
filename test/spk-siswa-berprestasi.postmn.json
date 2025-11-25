@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "SPK Siswa Berprestasi",
+    "_postman_id": "40806229-a272-4bc8-81b8-20c0dd929c18",
+    "description": "Collection untuk semua endpoint Admin dan Wali Kelas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin1\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/auth/login", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","auth","login"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - List Wali Kelas",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": { "raw": "http://localhost:4000/api/admin/wali", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","admin","wali"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - Create Wali Kelas",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"wali7\",\n  \"password\": \"12345\",\n  \"full_name\": \"Wali Kelas 1A\",\n  \"class_id\": 7\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/admin/wali", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","admin","wali"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - Update Wali Kelas",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"wali7update\",\n  \"password\": \"newpass123\",\n  \"full_name\": \"Wali Kelas 1A Updated\",\n  \"class_id\": 7\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/wali/7", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","wali","7"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin - Delete Wali Kelas",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": { "raw": "http://localhost:4000/api/wali/7", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","wali","7"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Wali - List Siswa",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_wali}}" }
+        ],
+        "url": { "raw": "http://localhost:4000/api/wali/students", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","wali","students"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Wali - Create/Update Skor Siswa",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_wali}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"student_id\": 1,\n  \"criteria_id\": 2,\n  \"score\": 85\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/wali/scores", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","wali","scores"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Ranking",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": { "raw": "http://localhost:4000/api/ranking", "protocol": "http", "host": ["localhost"], "port": "4000", "path": ["api","ranking"] }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    { "key": "token_admin", "value": "" },
+    { "key": "token_wali", "value": "" }
+  ]
+}

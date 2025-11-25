@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wali Kelas - Admin Panel</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: "Poppins", sans-serif; }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+  <div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-60 bg-white border-r hidden lg:block">
+      <div class="p-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-8">SAW DSS</h1>
+
+        <nav class="space-y-2">
+          <a href="dashboard.html" class="block px-3 py-2 rounded-lg bg-indigo-100 text-indigo-600 font-medium">
+            Dashboard
+          </a>
+          <a href="students.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Students
+          </a>
+          <a href="kriteria.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Criteria
+          </a>
+          <a href="scores.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Scores
+          </a>
+          <a href="walikelas.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            User
+          </a>
+          <a href="kelas.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Kelas
+          </a>
+
+          <div class="pt-6 border-t mt-6">
+            <a id="logoutBtnSidebar" href="index.html" class="block px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">
+              Logout
+            </a>
+          </div>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+
+      <h1 class="text-2xl font-bold text-gray-700 mb-6">Manajemen Wali Kelas</h1>
+
+      <!-- Form Card -->
+      <div class="bg-white p-6 rounded-xl shadow border mb-6">
+        <h2 id="form-title" class="text-lg font-semibold text-gray-700 mb-4">Tambah Wali Kelas</h2>
+
+        <form id="wali-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <input id="username" type="text" placeholder="Username"
+            class="border p-2 rounded focus:ring focus:ring-indigo-300" required>
+
+          <input id="password" type="password" placeholder="Password"
+            class="border p-2 rounded focus:ring focus:ring-indigo-300" required>
+
+          <input id="full_name" type="text" placeholder="Full Name"
+            class="border p-2 rounded focus:ring focus:ring-indigo-300" required>
+
+          <input id="class_id" type="number" placeholder="Class ID"
+            class="border p-2 rounded focus:ring focus:ring-indigo-300" required>
+
+          <button type="submit"
+            class="col-span-1 md:col-span-4 bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700 transition">
+            Simpan
+          </button>
+        </form>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white rounded-xl shadow border overflow-hidden">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-indigo-50 border-b">
+              <th class="p-3 text-left text-gray-700 text-sm">ID</th>
+              <th class="p-3 text-left text-gray-700 text-sm">Username</th>
+              <th class="p-3 text-left text-gray-700 text-sm">Full Name</th>
+              <th class="p-3 text-left text-gray-700 text-sm">Class ID</th>
+              <th class="p-3 text-center text-gray-700 text-sm">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="wali-table-body" class="text-sm">
+            <!-- Data via JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+
+  <!-- SCRIPT -->
+  <script>
+    const token = localStorage.getItem("token");
+    const apiUrl = "http://localhost:4000/api/wali";
+
+    let editId = null;
+
+    async function fetchWali() {
+      try {
+        const res = await fetch(apiUrl, {
+          headers: { "Authorization": "Bearer " + token },
+        });
+
+        const data = await res.json();
+        if (!data.data) {
+          alert("Gagal mengambil data wali kelas");
+          return;
+        }
+
+        const tbody = document.getElementById("wali-table-body");
+        tbody.innerHTML = "";
+
+        data.data.forEach((w) => {
+          tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50 transition">
+              <td class="p-3">${w.id}</td>
+              <td class="p-3">${w.username}</td>
+              <td class="p-3">${w.full_name}</td>
+              <td class="p-3">${w.class_id}</td>
+              <td class="p-3 text-center space-x-2">
+                <button onclick="editWali(${w.id}, '${escapeJs(w.username)}', '${escapeJs(w.full_name)}', ${w.class_id})"
+                  class="bg-yellow-400 px-2 py-1 rounded text-white text-xs hover:bg-yellow-500">
+                  Edit
+                </button>
+
+                <button onclick="deleteWali(${w.id})"
+                  class="bg-red-500 px-2 py-1 rounded text-white text-xs hover:bg-red-600">
+                  Hapus
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat fetch data");
+      }
+    }
+
+    function escapeJs(text) {
+      return text.replace(/'/g, "\\'");
+    }
+
+    document.getElementById("wali-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+        full_name: document.getElementById("full_name").value,
+        class_id: parseInt(document.getElementById("class_id").value),
+      };
+
+      let method = "POST";
+      let url = apiUrl;
+
+      if (editId) {
+        method = "PUT";
+        url = `${apiUrl}/${editId}`;
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      alert(data.message || "Berhasil");
+
+      document.getElementById("wali-form").reset();
+      editId = null;
+      document.getElementById("form-title").innerText = "Tambah Wali Kelas";
+
+      fetchWali();
+    });
+
+    function editWali(id, username, full_name, class_id) {
+      editId = id;
+      document.getElementById("username").value = username;
+      document.getElementById("full_name").value = full_name;
+      document.getElementById("class_id").value = class_id;
+      document.getElementById("password").value = "";
+      document.getElementById("form-title").innerText = "Edit Wali Kelas";
+    }
+
+    async function deleteWali(id) {
+      if (!confirm("Yakin ingin hapus?")) return;
+
+      const res = await fetch(`${apiUrl}/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token },
+      });
+
+      const data = await res.json();
+      alert(data.message || "Berhasil dihapus");
+
+      fetchWali();
+    }
+
+    fetchWali();
+  </script>
+
+</body>
+</html>
