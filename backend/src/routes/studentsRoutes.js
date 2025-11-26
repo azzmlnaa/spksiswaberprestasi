@@ -38,18 +38,18 @@ router.delete(
 // ==============================
 // WALI KELAS – siswa
 // ==============================
-router.post(
-  "/",
-  authMiddleware,
-  requireRole(["wali_kelas"]),
-  studentController.createStudentWali
-);
-
 router.get(
   "/",
   authMiddleware,
   requireRole(["wali_kelas"]),
   studentController.listStudentsWali
+);
+
+router.post(
+  "/",
+  authMiddleware,
+  requireRole(["wali_kelas"]),
+  studentController.createStudentWali
 );
 
 module.exports = router;

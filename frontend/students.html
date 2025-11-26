@@ -133,8 +133,190 @@
   <!-- Kalau mau aku rapikan biar senada juga, tinggal bilang ya -->
 
   <script>
-    // Di sini tinggal tempelkan semua JavaScript: loadStudents(), applyFilters(), dll.
-  </script>
+  const API = "http://localhost:4000/students/admin";
+
+  let students = [];
+  let filtered = [];
+
+  // ===================================
+  // LOAD DATA DARI BACKEND
+  // ===================================
+  async function loadStudents(showAlert = false) {
+    try {
+      const res = await fetch(API, {
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+      });
+
+      const json = await res.json();
+
+      if (json.status !== "success") throw new Error(json.message);
+
+      students = json.data;
+      filtered = students;
+
+      renderTable();
+      fillClassFilter();
+
+      if (showAlert) alert("Data berhasil diperbarui!");
+
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memuat data siswa!");
+    }
+  }
+
+  // ===================================
+  // RENDER TABLE
+  // ===================================
+  function renderTable() {
+    const tbody = document.getElementById("studentsTable");
+    const noData = document.getElementById("noData");
+
+    tbody.innerHTML = "";
+
+    if (filtered.length === 0) {
+      noData.classList.remove("hidden");
+      return;
+    }
+
+    noData.classList.add("hidden");
+
+    filtered.forEach((s, i) => {
+      tbody.innerHTML += `
+        <tr class="border-t">
+          <td class="px-4 py-2">${i + 1}</td>
+          <td class="px-4 py-2">${s.name}</td>
+          <td class="px-4 py-2">${s.nis}</td>
+          <td class="px-4 py-2">${s.class_name || "-"}</td>
+          <td class="px-4 py-2">${s.wali || "-"}</td>
+
+          <td class="px-4 py-2">
+            <button onclick="openEdit(${s.id})"
+              class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit</button>
+
+            <button onclick="deleteStudent(${s.id})"
+              class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Hapus</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  // ===================================
+  // FILTER + SEARCH
+  // ===================================
+  function applyFilters() {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const classId = document.getElementById("classFilter").value;
+
+    filtered = students.filter(s => {
+      const matchName = s.name.toLowerCase().includes(search);
+      const matchNis = s.nis.toLowerCase().includes(search);
+      const matchClass = classId === "" || s.class_id == classId;
+
+      return (matchName || matchNis) && matchClass;
+    });
+
+    renderTable();
+  }
+
+  // ===================================
+  // CLASS FILTER OPTION
+  // ===================================
+  function fillClassFilter() {
+    const select = document.getElementById("classFilter");
+    const classList = [...new Set(students.map(s => `${s.class_id}|${s.class_name}`))];
+
+    select.innerHTML = `<option value="">Semua Kelas</option>`;
+
+    classList.forEach(cls => {
+      const [id, name] = cls.split("|");
+      select.innerHTML += `<option value="${id}">${name}</option>`;
+    });
+  }
+
+  // ===================================
+  // TAMBAH DATA
+  // ===================================
+  function openAdd() {
+    const name = prompt("Nama siswa:");
+    const nis = prompt("NIS:");
+    const classId = prompt("Class ID (angka):");
+
+    if (!name || !nis || !classId) return alert("Semua field wajib diisi!");
+
+    fetch(API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify({ name, nis, class_id: classId })
+    })
+      .then(res => res.json())
+      .then(json => {
+        alert(json.message);
+        loadStudents();
+      });
+  }
+
+  // ===================================
+  // EDIT DATA
+  // ===================================
+  function openEdit(id) {
+    const s = students.find(x => x.id === id);
+
+    const name = prompt("Nama baru:", s.name);
+    const nis = prompt("NIS baru:", s.nis);
+    const classId = prompt("Class ID baru:", s.class_id);
+
+    fetch(`${API}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify({ name, nis, class_id: classId })
+    })
+      .then(res => res.json())
+      .then(json => {
+        alert(json.message);
+        loadStudents();
+      });
+  }
+
+  // ===================================
+  // HAPUS DATA
+  // ===================================
+  function deleteStudent(id) {
+    if (!confirm("Yakin ingin menghapus siswa ini?")) return;
+
+    fetch(`${API}/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      }
+    })
+      .then(res => res.json())
+      .then(json => {
+        alert(json.message);
+        loadStudents();
+      });
+  }
+
+  // ===================================
+  // EXPORT PDF (Dummy)
+  // ===================================
+  function exportPDF() {
+    alert("Fitur export PDF akan dihubungkan backend.");
+  }
+
+  // Jalankan load data saat halaman dibuka
+  loadStudents();
+</script>
+
 
 </body>
 </html>

@@ -11,7 +11,7 @@ const rankingController = require('./controllers/rankingController');
 const { authMiddleware, requireRole } = require('./middleware/auth');
 const authRoutes = require("./routes/authRoutes");
 
-const studentRoutes = require("./routes/students"); // CRUD siswa (admin + wali)
+const studentRoutes = require("./routes/studentsRoutes"); // CRUD siswa (admin + wali)
 const waliRoutes = require("./routes/wali");          // CRUD wali kelas
 const criteriaRoutes = require('./routes/criteriaRoutes');
 const kelasRoutes = require("./routes/kelasRoutes");
@@ -23,6 +23,7 @@ app.use(cors());
 app.use(bodyParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/kelas", kelasRoutes);
+app.use("/students", studentRoutes);
 
 // Test root
 app.get('/', (req, res) => res.json({ ok: true, service: 'spk-siswa-berprestasi backend' }));
@@ -40,7 +41,6 @@ app.post('/api/auth/login', authController.login);
 app.use('/api/criteria', criteriaRoutes);
 
 // Students (CRUD siswa → admin + wali)
-app.use("/api/students", studentRoutes);
 
 // Wali kelas (CRUD wali kelas)
 app.use("/api/wali", waliRoutes);
