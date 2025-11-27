@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scores - Admin</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: "Poppins", sans-serif; }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+  <div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-60 bg-white border-r hidden lg:block">
+      <div class="p-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-8">SAW DSS</h1>
+
+        <nav class="space-y-2">
+          <a href="dashboard.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">Dashboard</a>
+          <a href="students.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">Students</a>
+          <a href="kriteria.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">Criteria</a>
+          <a href="scores.html" class="block px-3 py-2 rounded-lg bg-indigo-100 text-indigo-600 font-medium">Scores</a>
+          <a href="walikelas.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">User</a>
+          <a href="kelas.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">Kelas</a>
+
+          <div class="pt-6 border-t mt-6">
+            <a id="logoutBtnSidebar" href="index.html"
+               class="block px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">
+              Logout
+            </a>
+          </div>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col">
+
+      <!-- Top bar -->
+      <header class="bg-white border-b px-6 py-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800">Scores</h2>
+
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">
+            AD
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="p-6">
+
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">Data Penilaian Siswa</h1>
+            <p class="text-gray-500 text-sm">Admin dapat memberi nilai berdasarkan setiap kriteria.</p>
+          </div>
+
+          <button onclick="openAdd()"
+                  class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            + Tambah Nilai
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200 roundsed-lg">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left">#</th>
+                  <th class="px-4 py-2 text-left">Nama Siswa</th>
+                  <th class="px-4 py-2 text-left">Kriteria</th>
+                  <th class="px-4 py-2 text-left">Nilai</th>
+                  <th class="px-4 py-2 text-left">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="scoreTable"></tbody>
+            </table>
+          </div>
+
+          <p id="noData" class="text-center text-gray-500 mt-4 hidden">Belum ada nilai.</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Add Modal -->
+  <div id="addModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-xl w-96 shadow-lg">
+      <h2 class="text-lg font-semibold mb-4">Tambah Nilai Siswa</h2>
+
+      <label class="text-sm">Siswa</label>
+      <select id="addStudent" class="border p-2 rounded w-full mb-2"></select>
+
+      <label class="text-sm">Kriteria</label>
+      <select id="addCriteria" class="border p-2 rounded w-full mb-2"></select>
+
+      <label class="text-sm">Nilai</label>
+      <input id="addScore" type="number" class="border p-2 rounded w-full mb-4">
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeAdd()" class="px-3 py-1 bg-gray-400 text-white rounded">Batal</button>
+        <button onclick="saveAdd()" class="px-3 py-1 bg-green-600 text-white rounded">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-xl w-96 shadow-lg">
+      <h2 class="text-lg font-semibold mb-4">Edit Nilai Siswa</h2>
+
+      <input type="hidden" id="editId">
+
+      <label class="text-sm">Nilai</label>
+      <input id="editScore" type="number" class="border p-2 rounded w-full mb-4">
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeEdit()" class="px-3 py-1 bg-gray-400 text-white rounded">Batal</button>
+        <button onclick="saveEdit()" class="px-3 py-1 bg-green-600 text-white rounded">Update</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API = "http://localhost:4000/api/scores";
+const API_STUDENTS = "http://localhost:4000/api/students/admin";
+const API_CRITERIA = "http://localhost:4000/api/criteria";
+const token = localStorage.getItem("token");
+
+async function loadScores() {
+  const res = await fetch(API, { headers: { "Authorization": "Bearer " + token }});
+  const json = await res.json();
+
+  const tbody = document.getElementById("scoreTable");
+  tbody.innerHTML = "";
+
+  if (!json.data || json.data.length === 0) {
+    document.getElementById("noData").classList.remove("hidden");
+    return;
+  }
+
+  document.getElementById("noData").classList.add("hidden");
+
+  json.data.forEach((item, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td class="px-4 py-2">${i+1}</td>
+        <td class="px-4 py-2">${item.student_name}</td>
+        <td class="px-4 py-2">${item.criteria_name}</td>
+        <td class="px-4 py-2">${item.score}</td>
+        <td class="px-4 py-2">
+          <button onclick="openEdit(${item.id}, ${item.score})"
+                  class="px-2 py-1 bg-yellow-500 text-white rounded">Edit</button>
+          <button onclick="deleteScore(${item.id})"
+                  class="px-2 py-1 bg-red-600 text-white rounded">Hapus</button>
+        </td>
+      </tr>`;
+  });
+}
+
+async function populateDropdowns() {
+  const sRes = await fetch(API_STUDENTS, { headers: { "Authorization": "Bearer " + token }});
+  const cRes = await fetch(API_CRITERIA);
+
+  const students = (await sRes.json()).data;
+  const criteria = await cRes.json();
+
+  let sOpt = "";
+  students.forEach(s => sOpt += `<option value="${s.id}">${s.name}</option>`);
+
+  document.getElementById("addStudent").innerHTML = sOpt;
+
+  let cOpt = "";
+  criteria.forEach(c => cOpt += `<option value="${c.id}">${c.name}</option>`);
+
+  document.getElementById("addCriteria").innerHTML = cOpt;
+}
+
+function openAdd() {
+  populateDropdowns();
+  document.getElementById("addModal").classList.remove("hidden");
+  document.getElementById("addModal").classList.add("flex");
+}
+
+function closeAdd() {
+  document.getElementById("addModal").classList.add("hidden");
+  document.getElementById("addModal").classList.remove("flex");
+}
+
+async function saveAdd() {
+  const student_id = document.getElementById("addStudent").value;
+  const criteria_id = document.getElementById("addCriteria").value;
+  const score = document.getElementById("addScore").value;
+
+  await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ student_id, criteria_id, score })
+  });
+
+  closeAdd();
+  loadScores();
+}
+
+function openEdit(id, score) {
+  document.getElementById("editId").value = id;
+  document.getElementById("editScore").value = score;
+
+  document.getElementById("editModal").classList.remove("hidden");
+  document.getElementById("editModal").classList.add("flex");
+}
+
+function closeEdit() {
+  document.getElementById("editModal").classList.add("hidden");
+  document.getElementById("editModal").classList.remove("flex");
+}
+
+async function saveEdit() {
+  const id = document.getElementById("editId").value;
+  const score = document.getElementById("editScore").value;
+
+  await fetch(`${API}/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ score })
+  });
+
+  closeEdit();
+  loadScores();
+}
+
+async function deleteScore(id) {
+  if (!confirm("Hapus nilai ini?")) return;
+
+  await fetch(`${API}/${id}`, {
+    method: "DELETE",
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  loadScores();
+}
+
+loadScores();
+</script>
+
+</body>
+</html>

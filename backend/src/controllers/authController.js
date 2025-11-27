@@ -1,43 +1,38 @@
-const db = require('../config/db');
-const { sign } = require('../utils');
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
-async function login(req, res) {
-  const { username, password } = req.body;
+exports.login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const [rows] = await pool.query(
+      "SELECT * FROM users WHERE username=? AND password=?",
+      [username, password]
+    );
 
-  if (!username || !password)
-    return res.status(400).json({ message: 'username & password required' });
+    if (rows.length === 0) {
+      return res.status(401).json({ message: "Username atau password salah" });
+    }
 
-  const [rows] = await db.query(
-    'SELECT id, username, password, full_name, role, class_id FROM users WHERE username = ?',
-    [username]
-  );
+    const user = rows[0];
 
-  if (!rows.length)
-    return res.status(401).json({ message: 'Invalid' });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+        class_id: user.class_id || null,  // penting untuk wali kelas
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-  const user = rows[0];
-
-  // langsung cocokkan tanpa hash
-  if (password !== user.password)
-    return res.status(401).json({ message: 'Invalid' });
-
-  const token = sign({
-    id: user.id,
-    username: user.username,
-    role: user.role,
-    class_id: user.class_id
-  });
-
-  res.json({
-    token,
-    user: {
-      id: user.id,
-      username: user.username,
-      full_name: user.full_name,
+    res.json({
+      status: "success",
+      token,
       role: user.role,
       class_id: user.class_id
-    }
-  });
-}
+    });
 
-module.exports = { login };
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

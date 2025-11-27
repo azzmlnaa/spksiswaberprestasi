@@ -2,82 +2,53 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
-const bodyParser = require('express').json;
-
-const authController = require('./controllers/authController');
-const adminController = require('./controllers/adminController');
-const waliController = require('./controllers/waliController');
-const rankingController = require('./controllers/rankingController');
-const { authMiddleware, requireRole } = require('./middleware/auth');
-const authRoutes = require("./routes/authRoutes");
-
-const studentRoutes = require("./routes/studentsRoutes"); // CRUD siswa (admin + wali)
-const waliRoutes = require("./routes/wali");          // CRUD wali kelas
-const criteriaRoutes = require('./routes/criteriaRoutes');
-const kelasRoutes = require("./routes/kelasRoutes");
 
 const app = express();
-
-// Middleware
 app.use(cors());
-app.use(bodyParser());
-app.use("/api/auth", authRoutes);
-app.use("/api/kelas", kelasRoutes);
-app.use("/students", studentRoutes);
+app.use(express.json());
 
-// Test root
-app.get('/', (req, res) => res.json({ ok: true, service: 'spk-siswa-berprestasi backend' }));
+// ==============================
+// IMPORT CONTROLLERS & ROUTES
+// ==============================
+const authRoutes = require("./routes/authRoutes");
+const studentRoutes = require("./routes/studentsRoutes");
+const waliRoutes = require("./routes/wali");
+const criteriaRoutes = require('./routes/criteriaRoutes');
+const kelasRoutes = require("./routes/kelasRoutes");
+const scoreRoutes = require("./routes/scoreRoutes");
+const rankingController = require('./controllers/rankingController');
+
+const { authMiddleware, requireRole } = require('./middleware/auth');
+app.use("/api/wali/students", require("./routes/waliStudentRoutes"));
+
+// ==============================
+// ROOT TEST
+// ==============================
+app.get('/', (req, res) => {
+  res.json({ ok: true, service: 'SPK Siswa Berprestasi Backend' });
+});
 
 // ==============================
 // AUTH
 // ==============================
-app.post('/api/auth/login', authController.login);
+app.use("/api/auth", authRoutes);
 
 // ==============================
-// ROUTES
+// MASTER DATA ROUTES
 // ==============================
-
-// Criteria
-app.use('/api/criteria', criteriaRoutes);
-
-// Students (CRUD siswa → admin + wali)
-
-// Wali kelas (CRUD wali kelas)
-app.use("/api/wali", waliRoutes);
+app.use("/api/kelas", kelasRoutes);
+app.use("/api/criteria", criteriaRoutes);
+app.use("/api/students", studentRoutes);   // CRUD siswa (admin + wali)
+app.use("/api/wali", waliRoutes);          // CRUD wali kelas
+app.use("/api/scores", scoreRoutes);       // CRUD nilai siswa (admin)
 
 // ==============================
-// ADMIN – CRUD tambahan (opsional jika memang ada di adminController)
+// RANKING SAW
 // ==============================
-if(adminController.createWali && adminController.listWali){
-  app.post('/api/admin/wali', authMiddleware, requireRole(['admin']), adminController.createWali);
-  app.get('/api/admin/wali', authMiddleware, requireRole(['admin']), adminController.listWali);
-}
-
-if(adminController.createCriteria && adminController.listCriteria){
-  app.post('/api/admin/criteria', authMiddleware, requireRole(['admin']), adminController.createCriteria);
-  app.get('/api/admin/criteria', authMiddleware, requireRole(['admin']), adminController.listCriteria);
-}
+app.get("/api/ranking", authMiddleware, rankingController.rankingByClass);
 
 // ==============================
-// WALI – CRUD siswa & skor
-// ==============================
-if(waliController.createStudent && waliController.listStudents){
-  app.post('/api/wali/students', authMiddleware, requireRole(['wali_kelas']), waliController.createStudent);
-  app.get('/api/wali/students', authMiddleware, requireRole(['wali_kelas']), waliController.listStudents);
-}
-
-if(waliController.upsertScore && waliController.listScoresByStudent){
-  app.post('/api/wali/scores', authMiddleware, requireRole(['wali_kelas']), waliController.upsertScore);
-  app.get('/api/wali/students/:student_id/scores', authMiddleware, requireRole(['wali_kelas']), waliController.listScoresByStudent);
-}
-
-// ==============================
-// RANKING
-// ==============================
-app.get('/api/ranking', authMiddleware, rankingController.rankingByClass);
-
-// ==============================
-// START SERVER
+// SERVER START
 // ==============================
 const port = process.env.PORT || 4000;
-app.listen(port, () => console.log('Server listening on port', port));
+app.listen(port, () => console.log(`Server berjalan di port ${port}`));
