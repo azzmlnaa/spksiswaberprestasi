@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Ranking SAW</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: "Poppins", sans-serif; }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-60 bg-white border-r hidden lg:block">
+    <div class="p-6">
+      <h1 class="text-xl font-bold text-gray-800 mb-6">SAW DSS</h1>
+
+      <nav class="space-y-2">
+        <a href="dashboard.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Dashboard</a>
+        <a href="students.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Siswa</a>
+        <a href="kriteria.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Kriteria</a>
+        <a href="kelas.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Kelas</a>
+        <a href="admin_ranking.html" class="block px-3 py-2 rounded-lg bg-indigo-100 text-indigo-600 font-medium">
+          Ranking SAW
+        </a>
+
+        <div class="pt-6 border-t mt-6">
+          <a href="index.html" class="block px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">Logout</a>
+        </div>
+      </nav>
+    </div>
+  </aside>
+
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col">
+
+    <!-- Top bar -->
+    <header class="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-gray-800">Ranking SAW</h2>
+
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">AD</div>
+      </div>
+    </header>
+
+
+    <!-- Page Content -->
+    <main class="p-6">
+
+      <!-- Header -->
+      <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Hasil Perhitungan SAW</h1>
+          <p class="text-gray-500 text-sm">Lihat ranking siswa berdasarkan kelas</p>
+        </div>
+
+        <div class="flex gap-3">
+          <select id="kelasSelect" class="border p-2 rounded">
+            <option value="">Pilih Kelas</option>
+          </select>
+
+          <button onclick="loadRanking()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            Hitung SAW
+          </button>
+
+          <button onclick="exportPDF()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+            Export PDF
+          </button>
+        </div>
+      </div>
+
+
+      <!-- Table Ranking -->
+      <div class="bg-white border rounded-xl p-4 shadow">
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-200 rounded-lg">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left">Peringkat</th>
+                <th class="px-4 py-2 text-left">Nama</th>
+                <th class="px-4 py-2 text-left">NIS</th>
+                <th class="px-4 py-2 text-left">Nilai SAW</th>
+              </tr>
+            </thead>
+            <tbody id="rankingTable"></tbody>
+          </table>
+        </div>
+
+        <p id="noData" class="text-center text-gray-500 mt-4 hidden">Belum ada data ranking.</p>
+      </div>
+
+    </main>
+
+  </div>
+</div>
+
+<script>
+const API_RANKING = "http://localhost:4000/api/ranking?class_id=";
+const API_KELAS = "http://localhost:4000/api/kelas";
+const token = localStorage.getItem("token");
+
+// Redirect jika belum login
+if (!token) window.location.href = "index.html";
+
+// =================================
+// LOAD LIST KELAS
+// =================================
+async function loadKelas() {
+  const res = await fetch(API_KELAS, {
+    headers: { Authorization: "Bearer " + token },
+  });
+
+  const json = await res.json();
+  const select = document.getElementById("kelasSelect");
+
+  select.innerHTML = '<option value="">Pilih Kelas</option>';
+
+  json.data.forEach(k => {
+    select.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+  });
+}
+
+// =================================
+// LOAD RANKING SAW
+// =================================
+async function loadRanking() {
+  const classId = document.getElementById("kelasSelect").value;
+  if (!classId) return alert("Pilih kelas dulu ya Cinta ❤️");
+
+  const res = await fetch(API_RANKING + classId, {
+    headers: { Authorization: "Bearer " + token },
+  });
+
+  const json = await res.json();
+  const table = document.getElementById("rankingTable");
+  const noData = document.getElementById("noData");
+
+  table.innerHTML = "";
+
+  if (!json.data || json.data.length === 0) {
+    noData.classList.remove("hidden");
+    return;
+  }
+
+  noData.classList.add("hidden");
+
+  json.data.forEach((item, index) => {
+    let color = "";
+    if (index === 0) color = "bg-yellow-100";
+    else if (index === 1) color = "bg-gray-100";
+    else if (index === 2) color = "bg-orange-100";
+
+    table.innerHTML += `
+      <tr class="${color}">
+        <td class="px-4 py-2 font-bold">${index + 1}</td>
+        <td class="px-4 py-2">${item.name}</td>
+        <td class="px-4 py-2">${item.nis}</td>
+        <td class="px-4 py-2 font-semibold">${item.score.toFixed(4)}</td>
+      </tr>
+    `;
+  });
+}
+
+// =================================
+// EXPORT PDF
+// =================================
+function exportPDF() {
+  const classId = document.getElementById("kelasSelect").value;
+  if (!classId) return alert("Pilih kelas dulu ya Cinta ❤️");
+
+  window.open(
+    `http://localhost:4000/api/ranking/pdf?class_id=${classId}&token=${token}`,
+    "_blank"
+  );
+}
+
+// Run on load
+loadKelas();
+</script>
+
+</body>
+</html>
