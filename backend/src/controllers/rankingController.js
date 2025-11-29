@@ -1,101 +1,158 @@
-const pool = require("../config/db");
+const db = require("../config/db");
 
-// ================================
-// RANKING SAW PER KELAS
-// ================================
+// helper: run query dengan pool (mysql2 promise)
+async function q(sql, params=[]) {
+  const [rows] = await db.query(sql, params);
+  return rows;
+}
+
 exports.rankingByClass = async (req, res) => {
   try {
-    const waliId = req.user.id;
+    const user = req.user || {};
+    let class_id = null;
 
-    // ----- Ambil class wali -----
-    const [wali] = await pool.query(
-      "SELECT class_id FROM users WHERE id = ? AND role='wali'",
-      [waliId]
+    // ============================
+    // 1. Jika wali_kelas -> pakai class_id dari token
+    // ============================
+    if (user.role === "wali_kelas") {
+      if (!user.class_id) {
+        return res.status(400).json({
+          status: "error",
+          message: "Wali kelas tidak memiliki class_id pada token."
+        });
+      }
+      class_id = user.class_id;
+    }
+
+    // ============================
+    // 2. Jika admin -> ambil SEMUA siswa dari SEMUA kelas
+    // ============================
+    if (user.role === "admin") {
+      class_id = null; // tandai bahwa kita ambil semua kelas
+    }
+
+    // ============================
+    // 3. Ambil siswa
+    // ============================
+    let students = [];
+
+    if (class_id) {
+      students = await q(
+        "SELECT id, name, nis FROM students WHERE class_id = ? ORDER BY id ASC",
+        [class_id]
+      );
+    } else {
+      // admin ambil semua kelas
+      students = await q(
+        "SELECT id, name, nis FROM students ORDER BY class_id ASC, id ASC"
+      );
+    }
+
+    if (students.length === 0) {
+      return res.json({
+        status: "success",
+        data: [],
+        message: "Tidak ada siswa ditemukan."
+      });
+    }
+
+    // ============================
+    // 4. Ambil kriteria
+    // ============================
+    const criteria = await q(
+      "SELECT id, name, weight, type FROM criteria ORDER BY id ASC"
     );
 
-    if (wali.length === 0) {
-      return res.status(400).json({ status: "error", message: "Wali tidak ditemukan." });
+    if (criteria.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "Tidak ada kriteria terdaftar."
+      });
     }
 
-    const classId = wali[0].class_id;
+    // ============================
+    // 5. Ambil semua skor siswa
+    // ============================
+    const scoreRows = await q(`
+      SELECT s.student_id, s.criteria_id, s.score
+      FROM scores s
+    `);
 
-    // ----- Ambil semua kriteria -----
-    const [criteria] = await pool.query("SELECT * FROM criteria ORDER BY id ASC");
-
-    // ----- Ambil nilai siswa -----
-    const [scores] = await pool.query(`
-      SELECT 
-        s.id AS student_id,
-        s.name AS student_name,
-        sc.criteria_id,
-        sc.score
-      FROM scores sc
-      JOIN students s ON s.id = sc.student_id
-      WHERE s.class_id = ?
-      ORDER BY s.id ASC, sc.criteria_id ASC
-    `, [classId]);
-
-    if (scores.length === 0) {
-      return res.json({ status: "success", data: [], message: "Belum ada nilai." });
-    }
-
-    // ---- Bentuk matriks per siswa ----
-    const studentMap = {};
-    scores.forEach(r => {
-      if (!studentMap[r.student_id]) {
-        studentMap[r.student_id] = {
-          student_id: r.student_id,
-          student_name: r.student_name,
-          scores: {}
-        };
-      }
-      studentMap[r.student_id].scores[r.criteria_id] = r.score;
-    });
-
-    const students = Object.values(studentMap);
-
-    // ---- Normalisasi ----
-    const norm = {};
-    criteria.forEach(c => {
-      const col = students.map(s => s.scores[c.id] || 0);
-
-      const max = Math.max(...col);
-      const min = Math.min(...col);
-
-      norm[c.id] = students.map(s => {
-        const x = s.scores[c.id] || 0;
-        if (c.type === "benefit") return x / max;
-        if (c.type === "cost") return min / x;
-        return 0;
+    // ============================
+    // 6. Bangun matriks nilai
+    // ============================
+    const matrix = {};
+    students.forEach((st) => {
+      matrix[st.id] = {};
+      criteria.forEach((c) => {
+        matrix[st.id][c.id] = 0;
       });
     });
 
-    // ---- Hitung V ----
-    const ranking = students.map((s, i) => {
-      let Vi = 0;
-      criteria.forEach((c, idx) => {
-        const weight = c.weight;
-        Vi += norm[c.id][i] * weight;
+    scoreRows.forEach((r) => {
+      if (matrix[r.student_id]) {
+        matrix[r.student_id][r.criteria_id] = Number(r.score || 0);
+      }
+    });
+
+    // ============================
+    // 7. Normalisasi SAW
+    // ============================
+    const normalized = {};
+
+    for (const c of criteria) {
+      const values = students.map((st) => matrix[st.id][c.id] || 0);
+      const nonZero = values.filter((v) => v > 0);
+
+      const max = nonZero.length ? Math.max(...nonZero) : 0;
+      const min = nonZero.length ? Math.min(...nonZero) : 0;
+
+      for (const st of students) {
+        if (!normalized[st.id]) normalized[st.id] = {};
+
+        const val = matrix[st.id][c.id];
+
+        if (c.type === "benefit") {
+          normalized[st.id][c.id] = max === 0 ? 0 : val / max;
+        } else {
+          normalized[st.id][c.id] = val === 0 ? 0 : min / val;
+        }
+      }
+    }
+
+    // ============================
+    // 8. Hitung skor akhir
+    // ============================
+    const results = students.map((st) => {
+      let total = 0;
+
+      criteria.forEach((c) => {
+        total += (normalized[st.id][c.id] || 0) * Number(c.weight);
       });
 
       return {
-        student_id: s.student_id,
-        student_name: s.student_name,
-        final_score: Vi
+        student_id: st.id,
+        name: st.name,
+        nis: st.nis,
+        total: Number(total.toFixed(6)),
       };
     });
 
-    // ---- Urutkan ----
-    ranking.sort((a, b) => b.final_score - a.final_score);
+    // ============================
+    // 9. Urutkan Desc (Ranking)
+    // ============================
+    results.sort((a, b) => b.total - a.total);
 
-    res.json({
-      status: "success",
-      total_students: ranking.length,
-      criteria: criteria,
-      ranking: ranking
-    });
+    return res.json({ status: "success", data: results });
 
   } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
+    console.error("rankingByClass error:", err);
+    return res.status(500).json({ status: "error", message: err.message });
   }
+};
+
+
+exports.generatePdf = async (req, res) => {
+  // placeholder — bisa implement nanti jika butuh PDF
+  res.status(501).json({ status: "error", message: "PDF generation belum diimplementasikan" });
 };

@@ -29,8 +29,11 @@ exports.login = async (req, res) => {
       status: "success",
       token,
       role: user.role,
+      username: user.username,
       class_id: user.class_id
     });
+   
+
 
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -110,17 +110,29 @@
     </div>
   </div>
 
-  <script>
-    // Ambil nama wali dari localStorage
-    document.getElementById("waliName").textContent = 
-      localStorage.getItem("username") || "Wali Kelas";
+ <script>
+const token = localStorage.getItem("token");
+const waliName = localStorage.getItem("username");
 
-    // Logout
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.clear();
-      window.location.href = "login.html";
-    });
-  </script>
+document.getElementById("waliName").textContent = waliName || "Wali Kelas";
+
+fetch("http://localhost:4000/api/wali/dashboard", {
+  headers: { 
+    Authorization: "Bearer " + token
+  }
+})
+.then(res => res.json())
+.then(res => {
+  if (res.status !== "success") return;
+
+  let d = res.data;
+
+  document.getElementById("totalSiswa").textContent = d.total_siswa;
+  document.getElementById("siswaDinilai").textContent = d.siswa_dinilai;
+  document.getElementById("siswaBelum").textContent = d.siswa_belum;
+});
+</script>
+
 
 </body>
 </html>

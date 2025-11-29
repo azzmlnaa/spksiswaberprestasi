@@ -8,6 +8,16 @@ app.use(cors());
 app.use(express.json());
 
 // ==============================
+// IMPORT MIDDLEWARE
+// ==============================
+const { authMiddleware } = require('./middleware/auth');
+
+// ==============================
+// IMPORT CONTROLLERS
+// ==============================
+const rankingController = require('./controllers/rankingController');
+
+// ==============================
 // IMPORT ROUTES
 // ==============================
 const authRoutes = require("./routes/authRoutes");
@@ -16,12 +26,13 @@ const waliRoutes = require("./routes/wali");
 const criteriaRoutes = require('./routes/criteriaRoutes');
 const kelasRoutes = require("./routes/kelasRoutes");
 const scoreRoutes = require("./routes/scoreRoutes");
-const { authMiddleware } = require('./middleware/auth');
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const rankingRoutes = require("./routes/rankingRoutes");
+const waliDashboardRoutes = require("./routes/waliDashboardRoutes");
 
 // Wali kelas routes
-app.use("/api/wali/students", require("./routes/waliStudentRoutes"));
-app.use("/api/wali/scores", require("./routes/waliScoreRoutes"));
-
+const waliStudentRoutes = require("./routes/waliStudentRoutes");
+const waliScoreRoutes = require("./routes/waliScoreRoutes");
 
 // ==============================
 // ROOT TEST
@@ -29,13 +40,11 @@ app.use("/api/wali/scores", require("./routes/waliScoreRoutes"));
 app.get('/', (req, res) => {
   res.json({ ok: true, service: 'SPK Siswa Berprestasi Backend' });
 });
-app.get("/api/ranking/pdf", authMiddleware, rankingController.generatePdf);
 
 // ==============================
 // AUTH
 // ==============================
 app.use("/api/auth", authRoutes);
-
 
 // ==============================
 // MASTER DATA
@@ -45,12 +54,21 @@ app.use("/api/criteria", criteriaRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/wali", waliRoutes);
 app.use("/api/scores", scoreRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/ranking", rankingRoutes);
+app.use("/api/wali/dashboard", waliDashboardRoutes);
+
+// ==============================
+// WALI KELAS
+// ==============================
+app.use("/api/wali/students", waliStudentRoutes);
+app.use("/api/wali/scores", waliScoreRoutes);
 
 // ==============================
 // RANKING SAW
 // ==============================
-const rankingController = require('./controllers/rankingController');
 app.get("/api/ranking", authMiddleware, rankingController.rankingByClass);
+app.get("/api/ranking/pdf", authMiddleware, rankingController.generatePdf);
 
 // ==============================
 // RUN SERVER
