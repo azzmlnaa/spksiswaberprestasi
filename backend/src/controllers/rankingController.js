@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
-// helper: run query dengan pool (mysql2 promise)
-async function q(sql, params=[]) {
+// helper query
+async function q(sql, params = []) {
   const [rows] = await db.query(sql, params);
   return rows;
 }
@@ -9,10 +9,11 @@ async function q(sql, params=[]) {
 exports.rankingByClass = async (req, res) => {
   try {
     const user = req.user || {};
+    const queryClassId = req.query.class_id;
     let class_id = null;
 
     // ============================
-    // 1. Jika wali_kelas -> pakai class_id dari token
+    // 1. Wali kelas → pakai class_id dari token
     // ============================
     if (user.role === "wali_kelas") {
       if (!user.class_id) {
@@ -25,14 +26,14 @@ exports.rankingByClass = async (req, res) => {
     }
 
     // ============================
-    // 2. Jika admin -> ambil SEMUA siswa dari SEMUA kelas
+    // 2. Admin → pakai query ?class_id=...
     // ============================
     if (user.role === "admin") {
-      class_id = null; // tandai bahwa kita ambil semua kelas
+      class_id = queryClassId || null;  // bisa pilih kelas atau ambil semua
     }
 
     // ============================
-    // 3. Ambil siswa
+    // 3. Ambil siswa berdasarkan class_id
     // ============================
     let students = [];
 
@@ -42,9 +43,9 @@ exports.rankingByClass = async (req, res) => {
         [class_id]
       );
     } else {
-      // admin ambil semua kelas
+      // Admin tanpa class_id → ambil semua kelas
       students = await q(
-        "SELECT id, name, nis FROM students ORDER BY class_id ASC, id ASC"
+        "SELECT id, name, nis, class_id FROM students ORDER BY class_id ASC, id ASC"
       );
     }
 
@@ -63,13 +64,6 @@ exports.rankingByClass = async (req, res) => {
       "SELECT id, name, weight, type FROM criteria ORDER BY id ASC"
     );
 
-    if (criteria.length === 0) {
-      return res.status(400).json({
-        status: "error",
-        message: "Tidak ada kriteria terdaftar."
-      });
-    }
-
     // ============================
     // 5. Ambil semua skor siswa
     // ============================
@@ -79,17 +73,18 @@ exports.rankingByClass = async (req, res) => {
     `);
 
     // ============================
-    // 6. Bangun matriks nilai
+    // 6. Matriks nilai per siswa
     // ============================
     const matrix = {};
-    students.forEach((st) => {
+
+    students.forEach(st => {
       matrix[st.id] = {};
-      criteria.forEach((c) => {
+      criteria.forEach(c => {
         matrix[st.id][c.id] = 0;
       });
     });
 
-    scoreRows.forEach((r) => {
+    scoreRows.forEach(r => {
       if (matrix[r.student_id]) {
         matrix[r.student_id][r.criteria_id] = Number(r.score || 0);
       }
@@ -101,11 +96,11 @@ exports.rankingByClass = async (req, res) => {
     const normalized = {};
 
     for (const c of criteria) {
-      const values = students.map((st) => matrix[st.id][c.id] || 0);
-      const nonZero = values.filter((v) => v > 0);
+      const values = students.map(st => matrix[st.id][c.id] || 0);
+      const nonZeroValues = values.filter(v => v > 0);
 
-      const max = nonZero.length ? Math.max(...nonZero) : 0;
-      const min = nonZero.length ? Math.min(...nonZero) : 0;
+      const max = nonZeroValues.length ? Math.max(...nonZeroValues) : 0;
+      const min = nonZeroValues.length ? Math.min(...nonZeroValues) : 0;
 
       for (const st of students) {
         if (!normalized[st.id]) normalized[st.id] = {};
@@ -121,12 +116,12 @@ exports.rankingByClass = async (req, res) => {
     }
 
     // ============================
-    // 8. Hitung skor akhir
+    // 8. Hitung total akhir
     // ============================
-    const results = students.map((st) => {
+    const results = students.map(st => {
       let total = 0;
 
-      criteria.forEach((c) => {
+      criteria.forEach(c => {
         total += (normalized[st.id][c.id] || 0) * Number(c.weight);
       });
 
@@ -139,20 +134,20 @@ exports.rankingByClass = async (req, res) => {
     });
 
     // ============================
-    // 9. Urutkan Desc (Ranking)
+    // 9. Urutkan Desc
     // ============================
     results.sort((a, b) => b.total - a.total);
 
-    return res.json({ status: "success", data: results });
+    return res.json({
+      status: "success",
+      data: results
+    });
 
   } catch (err) {
     console.error("rankingByClass error:", err);
-    return res.status(500).json({ status: "error", message: err.message });
+    return res.status(500).json({
+      status: "error",
+      message: err.message,
+    });
   }
-};
-
-
-exports.generatePdf = async (req, res) => {
-  // placeholder — bisa implement nanti jika butuh PDF
-  res.status(501).json({ status: "error", message: "PDF generation belum diimplementasikan" });
 };

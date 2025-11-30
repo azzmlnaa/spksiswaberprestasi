@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 25 Nov 2025 pada 15.18
+-- Waktu pembuatan: 30 Nov 2025 pada 16.18
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.0.30
 
@@ -64,8 +64,8 @@ CREATE TABLE `criteria` (
 INSERT INTO `criteria` (`id`, `name`, `weight`, `type`) VALUES
 (1, 'Nilai Akademik', 0.4, 'benefit'),
 (2, 'Sikap', 0.3, 'benefit'),
-(4, 'Absen', 0.4, 'benefit'),
-(6, 'Nilai Akademik', 0.8, 'benefit');
+(3, 'Kedisiplinan', 0.2, 'benefit'),
+(4, 'Kehadiran', 0.1, 'benefit');
 
 -- --------------------------------------------------------
 
@@ -85,12 +85,50 @@ CREATE TABLE `scores` (
 --
 
 INSERT INTO `scores` (`id`, `student_id`, `criteria_id`, `score`) VALUES
-(1, 1, 1, 90),
+(1, 1, 1, 80),
 (2, 1, 2, 85),
-(4, 2, 1, 88),
-(5, 2, 2, 87),
-(7, 3, 1, 70),
-(8, 3, 2, 90);
+(3, 1, 3, 88),
+(4, 1, 4, 92),
+(5, 2, 1, 80),
+(6, 2, 2, 82),
+(7, 2, 3, 78),
+(8, 2, 4, 85),
+(9, 3, 1, 95),
+(10, 3, 2, 90),
+(11, 3, 3, 93),
+(12, 3, 4, 94),
+(13, 4, 1, 70),
+(14, 4, 2, 75),
+(15, 4, 3, 72),
+(16, 4, 4, 78),
+(17, 5, 1, 85),
+(18, 5, 2, 88),
+(19, 5, 3, 84),
+(20, 5, 4, 89),
+(21, 6, 1, 78),
+(22, 6, 2, 80),
+(23, 6, 3, 79),
+(24, 6, 4, 82),
+(25, 7, 1, 92),
+(26, 7, 2, 88),
+(27, 7, 3, 91),
+(28, 7, 4, 90),
+(29, 8, 1, 65),
+(30, 8, 2, 70),
+(31, 8, 3, 68),
+(32, 8, 4, 72),
+(33, 9, 1, 88),
+(34, 9, 2, 86),
+(35, 9, 3, 83),
+(36, 9, 4, 87),
+(37, 10, 1, 75),
+(38, 10, 2, 78),
+(39, 10, 3, 76),
+(40, 10, 4, 80),
+(42, 11, 2, 60),
+(43, 11, 3, 80),
+(44, 11, 4, 80),
+(45, 12, 1, 70);
 
 -- --------------------------------------------------------
 
@@ -112,8 +150,64 @@ CREATE TABLE `students` (
 INSERT INTO `students` (`id`, `name`, `nis`, `class_id`) VALUES
 (1, 'Ahmad', '101', 1),
 (2, 'Budi', '102', 1),
-(3, 'Cici', '201', 2),
-(4, 'Budi Santoso', '202501', 1);
+(3, 'Cici', '103', 1),
+(4, 'Dedi', '104', 1),
+(5, 'Eka', '105', 1),
+(6, 'Fajar', '106', 1),
+(7, 'Gina', '107', 1),
+(8, 'Hani', '108', 1),
+(9, 'Irfan', '109', 1),
+(10, 'Joko', '110', 1),
+(11, 'Lina', '201', 2),
+(12, 'Mira', '202', 2),
+(13, 'Nana', '203', 2),
+(14, 'Omar', '204', 2),
+(15, 'Putri', '205', 2),
+(16, 'Qori', '206', 2),
+(17, 'Rama', '207', 2),
+(18, 'Siti', '208', 2),
+(19, 'Toni', '209', 2),
+(20, 'Umar', '210', 2),
+(21, 'Vina', '301', 3),
+(22, 'Wulan', '302', 3),
+(23, 'Xena', '303', 3),
+(24, 'Yoga', '304', 3),
+(25, 'Zaki', '305', 3),
+(26, 'Aisyah', '306', 3),
+(27, 'Bagas', '307', 3),
+(28, 'Citra', '308', 3),
+(29, 'Danu', '309', 3),
+(30, 'Edo', '310', 3),
+(31, 'Farah', '401', 4),
+(32, 'Gilang', '402', 4),
+(33, 'Hana', '403', 4),
+(34, 'Ilham', '404', 4),
+(35, 'Jihan', '405', 4),
+(36, 'Kaka', '406', 4),
+(37, 'Laila', '407', 4),
+(38, 'Miko', '408', 4),
+(39, 'Novi', '409', 4),
+(40, 'Oni', '410', 4),
+(41, 'Peni', '501', 5),
+(42, 'Qori', '502', 5),
+(43, 'Riko', '503', 5),
+(44, 'Salsa', '504', 5),
+(45, 'Tari', '505', 5),
+(46, 'Udin', '506', 5),
+(47, 'Via', '507', 5),
+(48, 'Wahyu', '508', 5),
+(49, 'Xena', '509', 5),
+(50, 'Yusuf', '510', 5),
+(51, 'Zahra', '601', 6),
+(52, 'Ari', '602', 6),
+(53, 'Bayu', '603', 6),
+(54, 'Cindy', '604', 6),
+(55, 'Deni', '605', 6),
+(56, 'Eva', '606', 6),
+(57, 'Fikri', '607', 6),
+(58, 'Gita', '608', 6),
+(59, 'Heri', '609', 6),
+(60, 'Indah', '610', 6);
 
 -- --------------------------------------------------------
 
@@ -136,13 +230,12 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `role`, `class_id`) VALUES
 (1, 'admin', 'admin123', 'Administrator', 'admin', NULL),
-(2, 'wali1', '12345', 'Wali Kelas 1A', 'wali_kelas', 1),
-(3, 'wali2', '12345', 'Wali Kelas 1B', 'wali_kelas', 2),
-(4, 'wali3', '12345', 'Wali Kelas 2A', 'wali_kelas', 3),
-(5, 'wali4', '12345', 'Wali Kelas 2B', 'wali_kelas', 4),
-(6, 'wali5', '12345', 'Wali Kelas 3A', 'wali_kelas', 5),
-(7, 'wali6', '12345', 'Wali Kelas 3B', 'wali_kelas', 6),
-(8, 'santi', '123456', 'Ibu Santi', 'wali_kelas', 1);
+(2, 'wali1a', '12345', 'Wali Kelas 1A', 'wali_kelas', 1),
+(3, 'wali1b', '12345', 'Wali Kelas 1B', 'wali_kelas', 2),
+(4, 'wali2a', '12345', 'Wali Kelas 2A', 'wali_kelas', 3),
+(5, 'wali2b', '12345', 'Wali Kelas 2B', 'wali_kelas', 4),
+(6, 'wali3a', '12345', 'Wali Kelas 3A', 'wali_kelas', 5),
+(7, 'wali3b', '12345', 'Wali Kelas 3B', 'wali_kelas', 6);
 
 --
 -- Indexes for dumped tables
@@ -191,31 +284,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `classes`
 --
 ALTER TABLE `classes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT untuk tabel `criteria`
 --
 ALTER TABLE `criteria`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT untuk tabel `scores`
 --
 ALTER TABLE `scores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT untuk tabel `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)

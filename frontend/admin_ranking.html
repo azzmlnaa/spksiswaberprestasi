@@ -14,25 +14,41 @@
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
-  <aside class="w-60 bg-white border-r hidden lg:block">
-    <div class="p-6">
-      <h1 class="text-xl font-bold text-gray-800 mb-6">SAW DSS</h1>
+   <aside class="w-60 bg-white border-r hidden lg:block">
+      <div class="p-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-8">SAW DSS</h1>
 
-      <nav class="space-y-2">
-        <a href="dashboard.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Dashboard</a>
-        <a href="students.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Siswa</a>
-        <a href="kriteria.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Kriteria</a>
-        <a href="kelas.html" class="block px-3 py-2 rounded-lg hover:bg-gray-100">Kelas</a>
-        <a href="admin_ranking.html" class="block px-3 py-2 rounded-lg bg-indigo-100 text-indigo-600 font-medium">
-          Ranking SAW
-        </a>
+        <nav class="space-y-2">
+          <a href="dashboard.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Dashboard
+          </a>
+          <a href="students.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Students
+          </a>
+          <a href="kriteria.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Criteria
+          </a>
+          <a href="scores.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            Scores
+          </a>
+          <a href="walikelas.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+            User
+          </a>
+          <a href="kelas.html" class="block px-3 py-2 rounded-lg bg-indigo-100 text-indigo-600 font-medium">
+            Kelas
+          </a>
+          <a href="admin_ranking.html" class="block px-3 py-2 rounded-lg bg-indigo-100 text-indigo-600 font-medium">
+            Ranking
+          </a>
 
-        <div class="pt-6 border-t mt-6">
-          <a href="index.html" class="block px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">Logout</a>
-        </div>
-      </nav>
-    </div>
-  </aside>
+          <div class="pt-6 border-t mt-6">
+            <a id="logoutBtnSidebar" href="index.html" class="block px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">
+              Logout
+            </a>
+          </div>
+        </nav>
+      </div>
+    </aside>
 
 
   <!-- Main Content -->
@@ -67,9 +83,7 @@
             Hitung SAW
           </button>
 
-          <button onclick="exportPDF()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-            Export PDF
-          </button>
+        
         </div>
       </div>
 

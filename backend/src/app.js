@@ -29,6 +29,7 @@ const scoreRoutes = require("./routes/scoreRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const rankingRoutes = require("./routes/rankingRoutes");
 const waliDashboardRoutes = require("./routes/waliDashboardRoutes");
+const reportRoutes = require("./routes/report");
 
 // Wali kelas routes
 const waliStudentRoutes = require("./routes/waliStudentRoutes");
@@ -57,6 +58,7 @@ app.use("/api/scores", scoreRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/wali/dashboard", waliDashboardRoutes);
+app.use("/report", reportRoutes);
 
 // ==============================
 // WALI KELAS
@@ -67,9 +69,6 @@ app.use("/api/wali/scores", waliScoreRoutes);
 // ==============================
 // RANKING SAW
 // ==============================
-app.get("/api/ranking", authMiddleware, rankingController.rankingByClass);
-app.get("/api/ranking/pdf", authMiddleware, rankingController.generatePdf);
-
 // ==============================
 // RUN SERVER
 // ==============================

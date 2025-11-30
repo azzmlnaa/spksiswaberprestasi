@@ -40,7 +40,7 @@
           <a href="kelas.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
             Kelas
           </a>
-            <a href="admin_ranking.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+          <a href="admin_ranking.html" class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
             Ranking
           </a>
 
@@ -73,21 +73,44 @@
         <h1 class="text-2xl font-bold text-gray-800 mb-6">Welcome, Admin</h1>
 
         <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          
-          <div class="bg-white border rounded-xl p-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+
+          <div class="bg-white border rounded-xl p-5 shadow-sm">
             <p class="text-sm text-gray-500">Total Students</p>
             <h3 id="totalSiswa" class="text-3xl font-semibold text-gray-800 mt-2">0</h3>
           </div>
 
-          <div class="bg-white border rounded-xl p-5">
+          <div class="bg-white border rounded-xl p-5 shadow-sm">
             <p class="text-sm text-gray-500">Total Criteria</p>
             <h3 id="totalKriteria" class="text-3xl font-semibold text-gray-800 mt-2">0</h3>
           </div>
 
-          <div class="bg-white border rounded-xl p-5">
+          <div class="bg-white border rounded-xl p-5 shadow-sm">
             <p class="text-sm text-gray-500">Total Scores</p>
             <h3 id="totalPenilaian" class="text-3xl font-semibold text-gray-800 mt-2">0</h3>
+          </div>
+
+        </div>
+
+        <!-- 2 Columns Section: Top 5 Ranking & List User -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Top 5 Ranking -->
+          <div class="bg-white border rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 5 Highest Score</h3>
+
+            <ul id="topRankingList" class="space-y-3">
+              <li class="text-gray-500 text-sm">Loading...</li>
+            </ul>
+          </div>
+
+          <!-- List User / Wali Kelas -->
+          <div class="bg-white border rounded-xl p-6 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">List User / Wali Kelas</h3>
+
+            <ul id="userList" class="space-y-3">
+              <li class="text-gray-500 text-sm">Loading...</li>
+            </ul>
           </div>
 
         </div>
@@ -96,13 +119,15 @@
 
     </div>
   </div>
-  <script>async function updateDashboard() {
+
+<script>
+async function updateDashboard() {
   const res = await fetch("http://localhost:4000/api/dashboard", {
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("token")
     }
   });
-  
+
   const data = await res.json();
 
   document.getElementById("totalSiswa").textContent = data.data.totalStudents;
@@ -110,7 +135,56 @@
   document.getElementById("totalPenilaian").textContent = data.data.totalScores;
 }
 
+async function loadTopRanking() {
+  const res = await fetch("http://localhost:4000/api/ranking/top5", {
+    headers: {
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    }
+  });
+
+  const data = await res.json();
+  const list = document.getElementById("topRankingList");
+  list.innerHTML = "";
+
+  if (data.data.length === 0) {
+    list.innerHTML = `<li class="text-gray-500">No ranking data</li>`;
+    return;
+  }
+
+  data.data.forEach((item, i) => {
+    list.innerHTML += `
+      <li class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+        <span>${i + 1}. ${item.student_name}</span>
+        <span class="font-semibold text-indigo-600">${item.score}</span>
+      </li>
+    `;
+  });
+}
+
+async function loadUsers() {
+  const res = await fetch("http://localhost:4000/api/users", {
+    headers: {
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    }
+  });
+
+  const data = await res.json();
+  const list = document.getElementById("userList");
+  list.innerHTML = "";
+
+  data.data.forEach(user => {
+    list.innerHTML += `
+      <li class="p-3 bg-gray-50 rounded-lg border flex justify-between items-center">
+        <span>${user.username}</span>
+        <span class="text-sm text-gray-500">${user.role}</span>
+      </li>
+    `;
+  });
+}
+
 updateDashboard();
+loadTopRanking();
+loadUsers();
 </script>
 
 </body>
